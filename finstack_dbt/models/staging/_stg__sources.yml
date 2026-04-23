@@ -1,0 +1,76 @@
+version: 2
+
+sources:
+  - name: finstack_raw
+    database: finstack-analytics
+    schema: finstack_raw
+    description: "Raw stock market data loaded from Yahoo Finance via yfinance Python library."
+
+    tables:
+      - name: raw_prices
+        description: "Daily OHLCV price data for 30 S&P 500 stocks, 5 years of history."
+        columns:
+          - name: ticker
+            description: "Stock ticker symbol (e.g., AAPL, MSFT)"
+          - name: date
+            description: "Trading date"
+          - name: open
+            description: "Opening price for the trading day"
+          - name: high
+            description: "Highest price during the trading day"
+          - name: low
+            description: "Lowest price during the trading day"
+          - name: close
+            description: "Closing price for the trading day"
+          - name: volume
+            description: "Number of shares traded"
+          - name: dividends
+            description: "Dividend paid on this date (0 if none)"
+          - name: stock_splits
+            description: "Stock split ratio (0 if none)"
+          - name: _loaded_at
+            description: "Timestamp when the row was loaded into BigQuery"
+
+      - name: raw_company_info
+        description: "Company profile data, one row per ticker. Overwritten on each load."
+        columns:
+          - name: ticker
+            description: "Stock ticker symbol"
+          - name: short_name
+            description: "Company short name"
+          - name: long_name
+            description: "Full legal company name"
+          - name: sector
+            description: "GICS sector classification (e.g., Technology, Healthcare)"
+          - name: industry
+            description: "GICS industry classification"
+          - name: country
+            description: "Country of headquarters"
+          - name: market_cap
+            description: "Market capitalization in USD"
+          - name: enterprise_value
+            description: "Enterprise value in USD"
+          - name: recommendation_key
+            description: "Analyst consensus recommendation (buy, hold, sell)"
+          - name: _loaded_at
+            description: "Timestamp when the row was loaded into BigQuery"
+
+      - name: raw_financials
+        description: "Quarterly income statement data for each ticker."  
+        columns:
+          - name: ticker
+            description: "Stock ticker symbol"
+          - name: date
+            description: "Quarter end date"
+          - name: total_revenue
+            description: "Total revenue for the quarter"
+          - name: gross_profit
+            description: "Gross profit for the quarter"
+          - name: operating_income
+            description: "Operating income (EBIT) for the quarter"
+          - name: net_income
+            description: "Net income after tax for the quarter"
+          - name: ebitda
+            description: "Earnings before interest, tax, depreciation, and amortization"
+          - name: _loaded_at
+            description: "Timestamp when the row was loaded into BigQuery"
