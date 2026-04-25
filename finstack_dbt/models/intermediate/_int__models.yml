@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: int_prices_with_returns
+    description: "Enriches daily prices with previous day close and daily return percentage using LAG window function."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: date
+        description: "Trading date"
+      - name: close_price
+        description: "Closing price for the trading day"
+      - name: prev_close_price
+        description: "Previous trading day closing price (via LAG)"
+      - name: daily_return_pct
+        description: "Daily return as percentage: (close - prev_close) / prev_close * 100"
+
+  - name: int_prices_moving_averages
+    description: "Adds 20-day and 50-day simple moving averages (SMA) to daily prices with returns."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: date
+        description: "Trading date"
+      - name: sma_20
+        description: "20-day simple moving average of closing price"
+      - name: sma_50
+        description: "50-day simple moving average of closing price"
+
+  - name: int_financials_quarterly
+    description: "Enriches quarterly financials with quarter-over-quarter revenue growth and margin calculations."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: quarter_date
+        description: "Quarter end date"
+      - name: revenue_growth_pct
+        description: "Quarter-over-quarter revenue growth as percentage"
+      - name: gross_margin_pct
+        description: "Gross profit as percentage of total revenue"
+      - name: net_margin_pct
+        description: "Net income as percentage of total revenue"
