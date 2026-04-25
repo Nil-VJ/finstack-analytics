@@ -209,3 +209,4 @@ credentials/
 credentials/
 venv/
 *.txt
+logs/

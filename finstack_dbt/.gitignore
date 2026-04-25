@@ -3,3 +3,7 @@ dbt_internal_packages/
 logs/
 target/
 .env
+logs/
+target/
+finstack_dbt/target/
+finstack_dbt/logs/
