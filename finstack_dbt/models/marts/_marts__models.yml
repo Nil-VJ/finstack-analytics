@@ -6,12 +6,17 @@ models:
     columns:
       - name: ticker
         description: "Stock ticker symbol - primary key"
+        tests:
+          - not_null
+          - unique
       - name: short_name
         description: "Company short name"
       - name: long_name
         description: "Full legal company name"
       - name: sector
         description: "GICS sector classification"
+        tests:
+          - not_null
       - name: industry
         description: "GICS industry classification"
       - name: market_cap
@@ -22,6 +27,9 @@ models:
     columns:
       - name: sector
         description: "GICS sector name - primary key"
+        tests:
+          - not_null
+          - unique
       - name: company_count
         description: "Number of companies in this sector"
       - name: total_market_cap
@@ -30,14 +38,27 @@ models:
         description: "Average market cap per company in sector"
 
   - name: fct_prices_daily
-    description: "Daily stock prices with returns and moving averages. Incremental materialization - only new dates are processed after initial load."
+    description: "Daily stock prices with returns and moving averages. Incremental materialization."
     columns:
       - name: ticker
         description: "Stock ticker symbol"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_companies')
+                field: ticker
       - name: date
         description: "Trading date"
+        tests:
+          - not_null
       - name: close_price
         description: "Closing price"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
       - name: daily_return_pct
         description: "Daily return as percentage vs previous trading day"
       - name: sma_20
@@ -46,14 +67,22 @@ models:
         description: "50-day simple moving average of closing price"
       - name: volume
         description: "Number of shares traded"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
 
   - name: fct_returns
     description: "Monthly aggregated return metrics per ticker."
     columns:
       - name: ticker
         description: "Stock ticker symbol"
+        tests:
+          - not_null
       - name: month
         description: "First day of the month"
+        tests:
+          - not_null
       - name: trading_days
         description: "Number of trading days in the month"
       - name: avg_daily_return_pct
