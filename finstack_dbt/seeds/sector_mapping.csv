@@ -1,0 +1,7 @@
+sector,sector_code,asset_class
+Technology,TECH,Growth
+Financials,FIN,Value
+Healthcare,HC,Defensive
+Energy,ENRG,Cyclical
+Consumer Discretionary,CD,Cyclical
+Consumer Staples,CS,Defensive

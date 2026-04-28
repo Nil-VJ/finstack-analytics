@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: dim_companies
+    description: "Company dimension table with profile information for each ticker."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol - primary key"
+      - name: short_name
+        description: "Company short name"
+      - name: long_name
+        description: "Full legal company name"
+      - name: sector
+        description: "GICS sector classification"
+      - name: industry
+        description: "GICS industry classification"
+      - name: market_cap
+        description: "Market capitalization in USD"
+
+  - name: dim_sectors
+    description: "Sector-level summary with company count and market cap aggregations."
+    columns:
+      - name: sector
+        description: "GICS sector name - primary key"
+      - name: company_count
+        description: "Number of companies in this sector"
+      - name: total_market_cap
+        description: "Sum of market cap across all companies in sector"
+      - name: avg_market_cap
+        description: "Average market cap per company in sector"
+
+  - name: fct_prices_daily
+    description: "Daily stock prices with returns and moving averages. Incremental materialization - only new dates are processed after initial load."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: date
+        description: "Trading date"
+      - name: close_price
+        description: "Closing price"
+      - name: daily_return_pct
+        description: "Daily return as percentage vs previous trading day"
+      - name: sma_20
+        description: "20-day simple moving average of closing price"
+      - name: sma_50
+        description: "50-day simple moving average of closing price"
+      - name: volume
+        description: "Number of shares traded"
+
+  - name: fct_returns
+    description: "Monthly aggregated return metrics per ticker."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: month
+        description: "First day of the month"
+      - name: trading_days
+        description: "Number of trading days in the month"
+      - name: avg_daily_return_pct
+        description: "Average daily return percentage for the month"
+      - name: total_volume
+        description: "Total shares traded during the month"

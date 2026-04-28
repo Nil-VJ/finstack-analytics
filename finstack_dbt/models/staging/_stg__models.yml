@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_prices
+    description: "Cleaned daily price data. Columns renamed to snake_case, nulls filtered out."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: date
+        description: "Trading date"
+      - name: open_price
+        description: "Opening price, renamed from 'open'"
+      - name: high_price
+        description: "Highest price during the day"
+      - name: low_price
+        description: "Lowest price during the day"
+      - name: close_price
+        description: "Closing price, rows with null close filtered out"
+      - name: volume
+        description: "Number of shares traded"
+
+  - name: stg_company_info
+    description: "Cleaned company profile data. One row per ticker."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: sector
+        description: "GICS sector classification"
+      - name: industry
+        description: "GICS industry classification"
+      - name: market_cap
+        description: "Market capitalization in USD"
+
+  - name: stg_financials
+    description: "Cleaned quarterly income statement data. Date renamed to quarter_date."
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+      - name: quarter_date
+        description: "Quarter end date, renamed from 'date'"
+      - name: total_revenue
+        description: "Total revenue for the quarter"
+      - name: net_income
+        description: "Net income after tax"
