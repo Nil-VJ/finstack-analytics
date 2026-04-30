@@ -5,6 +5,7 @@ profile: finstack_dbt
 seed-paths: ["seeds"]
 model-paths: ["models"]
 macro-paths: ["macros"]
+docs-paths: ["docs"]
 clean-targets:
   - "target"
   - "dbt_packages"
