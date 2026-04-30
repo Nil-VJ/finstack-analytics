@@ -14,7 +14,7 @@ renamed as (
         industry,
         country,
         cast(market_cap as int64) as market_cap,
-        cast(enterprise_value as int64) as enterprise_value,
+        cast(enterprise_value as float64) as enterprise_value,
         recommendation_key,
         _loaded_at
 

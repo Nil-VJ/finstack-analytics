@@ -5,6 +5,11 @@ sources:
     database: finstack-analytics
     schema: finstack_raw
     description: "Raw stock market data loaded from Yahoo Finance via yfinance Python library."
+    config:
+      loaded_at_field: _loaded_at
+      freshness:
+        warn_after: { count: 36, period: hour }
+        error_after: { count: 48, period: hour }
 
     tables:
       - name: raw_prices
