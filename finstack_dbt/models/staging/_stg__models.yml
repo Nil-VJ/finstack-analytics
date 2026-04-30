@@ -37,8 +37,7 @@ models:
         description: "GICS sector classification"
         tests:
           - accepted_values:
-              arguments:
-                values: ['Technology', 'Financial Services', 'Healthcare', 'Energy', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive']
+              values: ['Technology', 'Financial Services', 'Healthcare', 'Energy', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive']
       - name: industry
         description: "GICS industry classification"
       - name: market_cap
