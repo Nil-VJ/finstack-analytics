@@ -1,0 +1,10 @@
+groups:
+  - name: finance
+    owner:
+      name: "FinStack Analytics Team"
+      email: "analytics@finstack.io"
+
+  - name: risk
+    owner:
+      name: "FinStack Risk Team"
+      email: "risk@finstack.io"

@@ -3,9 +3,11 @@ version: 2
 models:
   - name: dim_companies
     description: "Company dimension table with profile information for each ticker."
+    config:
+      group: finance
     columns:
       - name: ticker
-        description: "Stock ticker symbol - primary key"
+        description: "{{ doc('ticker_description') }}"
         tests:
           - not_null
           - unique
@@ -26,9 +28,11 @@ models:
 
   - name: dim_sectors
     description: "Sector-level summary with company count and market cap aggregations."
+    config:
+      group: finance
     columns:
       - name: sector
-        description: "GICS sector name - primary key"
+        description: "GICS sector name - primary key" 
         tests:
           - not_null
           - unique
@@ -41,9 +45,16 @@ models:
 
   - name: fct_prices_daily
     description: "Daily stock prices with returns and moving averages. Incremental materialization."
+    config:
+      group: finance
+      contract:
+        enforced: true
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
+        description: "{{ doc('ticker_description') }}"
+        data_type: string
+        constraints:
+          - type: not_null
         tests:
           - not_null
           - relationships:
@@ -51,31 +62,55 @@ models:
               field: ticker
       - name: date
         description: "Trading date"
+        data_type: date
+        constraints:
+          - type: not_null
         tests:
           - not_null
+      - name: open_price
+        description: "Opening price"
+        data_type: float64
+      - name: high_price
+        description: "Highest price during the day"
+        data_type: float64
+      - name: low_price
+        description: "Lowest price during the day"
+        data_type: float64
       - name: close_price
         description: "Closing price"
+        data_type: float64
+        constraints:
+          - type: not_null
         tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 0
-      - name: daily_return_pct
-        description: "Daily return as percentage vs previous trading day"
-      - name: sma_20
-        description: "20-day simple moving average of closing price"
-      - name: sma_50
-        description: "50-day simple moving average of closing price"
       - name: volume
         description: "Number of shares traded"
+        data_type: int64
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 0
-
+      - name: prev_close_price
+        description: "Previous trading day closing price"
+        data_type: float64
+      - name: daily_return_pct
+        description: "Daily return as percentage"
+        data_type: float64
+      - name: sma_20
+        description: "20-day simple moving average"
+        data_type: float64
+      - name: sma_50
+        description: "50-day simple moving average"
+        data_type: float64
+ 
   - name: fct_returns
     description: "Monthly aggregated return metrics per ticker."
+    config:
+      group: finance
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
+        description: "{{ doc('ticker_description') }}"
         tests:
           - not_null
       - name: month
