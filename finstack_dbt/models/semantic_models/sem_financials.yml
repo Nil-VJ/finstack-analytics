@@ -1,0 +1,39 @@
+semantic_models:
+  - name: financials
+    description: "Semantic model for quarterly financial analysis"
+    model: ref('int_financials_quarterly')
+    defaults:
+      agg_time_dimension: quarter_date
+
+    entities:
+      - name: ticker
+        type: primary
+        expr: ticker
+
+    measures:
+      - name: total_revenue_sum
+        agg: sum
+        expr: total_revenue
+        description: "Sum of total revenue"
+
+      - name: net_income_sum
+        agg: sum
+        expr: net_income
+        description: "Sum of net income"
+
+      - name: avg_gross_margin
+        agg: average
+        expr: gross_margin_pct
+        description: "Average gross margin percentage"
+
+      - name: avg_net_margin
+        agg: average
+        expr: net_margin_pct
+        description: "Average net margin percentage"
+
+    dimensions:
+      - name: quarter_date
+        type: time
+        type_params:
+          time_granularity: quarter
+        expr: quarter_date

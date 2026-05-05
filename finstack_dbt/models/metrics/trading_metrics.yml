@@ -1,0 +1,21 @@
+metrics:
+  - name: avg_closing_price
+    type: simple
+    label: "Average Closing Price"
+    description: "Average closing price per ticker over a time period"
+    type_params:
+      measure: avg_close_price
+
+  - name: total_trading_volume
+    type: simple
+    label: "Total Trading Volume"
+    description: "Sum of shares traded over a period"
+    type_params:
+      measure: total_volume
+
+  - name: avg_daily_return_pct
+    type: simple
+    label: "Average Daily Return"
+    description: "Average daily return percentage"
+    type_params:
+      measure: avg_daily_return

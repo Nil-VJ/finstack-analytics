@@ -1,0 +1,14 @@
+metrics:
+  - name: gross_margin
+    type: simple
+    label: "Gross Margin %"
+    description: "Average gross profit as percentage of revenue"
+    type_params:
+      measure: avg_gross_margin
+
+  - name: net_margin
+    type: simple
+    label: "Net Margin %"
+    description: "Average net income as percentage of revenue"
+    type_params:
+      measure: avg_net_margin

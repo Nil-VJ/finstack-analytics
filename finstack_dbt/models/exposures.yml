@@ -1,0 +1,27 @@
+version: 2
+
+exposures:
+  - name: portfolio_performance_dashboard
+    type: dashboard
+    description: "Daily portfolio performance dashboard showing price trends, returns, and sector allocation for the FinStack investment platform."
+    owner:
+      name: "FinStack Analytics Team"
+      email: "analytics@finstack.io"
+    depends_on:
+      - ref('fct_prices_daily')
+      - ref('fct_returns')
+      - ref('dim_companies')
+      - ref('dim_sectors')
+    url: "https://lookerstudio.google.com/placeholder"
+    maturity: medium
+
+  - name: risk_monitoring_report
+    type: analysis
+    description: "Weekly risk and volatility report for the compliance team, tracking moving average crossovers and return distributions."
+    owner:
+      name: "FinStack Risk Team"
+      email: "risk@finstack.io"
+    depends_on:
+      - ref('fct_prices_daily')
+      - ref('dim_companies')
+    maturity: low

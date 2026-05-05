@@ -1,0 +1,48 @@
+semantic_models:
+  - name: prices
+    description: "Semantic model for daily stock price analysis"
+    model: ref('fct_prices_daily')
+    defaults:
+      agg_time_dimension: date
+
+    entities:
+      - name: ticker
+        type: primary
+        expr: ticker
+
+    measures:
+      - name: avg_close_price
+        agg: average
+        expr: close_price
+        description: "Average closing price"
+
+      - name: total_volume
+        agg: sum
+        expr: volume
+        description: "Total shares traded"
+
+      - name: avg_daily_return
+        agg: average
+        expr: daily_return_pct
+        description: "Average daily return percentage"
+
+      - name: max_high_price
+        agg: max
+        expr: high_price
+        description: "Maximum high price in period"
+
+      - name: min_low_price
+        agg: min
+        expr: low_price
+        description: "Minimum low price in period"
+
+    dimensions:
+      - name: date
+        type: time
+        type_params:
+          time_granularity: day
+        expr: date
+
+      - name: ticker_symbol
+        type: categorical
+        expr: ticker
