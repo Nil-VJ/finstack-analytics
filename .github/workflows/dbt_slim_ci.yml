@@ -1,0 +1,69 @@
+name: dbt Slim CI
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  DBT_PROFILES_DIR: ./finstack_dbt
+  DBT_PROJECT_DIR: ./finstack_dbt
+
+jobs:
+  dbt-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install dbt-core==1.7.7 dbt-bigquery==1.7.7
+
+      - name: Create credentials file
+        run: |
+          mkdir -p credentials
+          echo '${{ secrets.GCP_SA_JSON }}' > credentials/service_account.json
+
+      - name: Create profiles.yml
+        run: |
+          cat > finstack_dbt/profiles.yml << EOF
+          finstack_dbt:
+            target: ci
+            outputs:
+              ci:
+                type: bigquery
+                method: service-account
+                database: finstack-analytics
+                schema: finstack_raw_ci
+                keyfile: ../credentials/service_account.json
+                location: EU
+                threads: 4
+          EOF
+
+      - name: Install dbt packages
+        run: cd finstack_dbt && dbt deps
+
+      - name: Download production manifest
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          name: prod-manifest
+          path: finstack_dbt/prod-state
+          workflow: dbt_daily.yml
+          branch: main
+          if_no_artifact_found: warn
+
+      - name: Run dbt build (modified only)
+        run: |
+          cd finstack_dbt
+          if [ -f prod-state/manifest.json ]; then
+            dbt build --select state:modified+ --defer --state ./prod-state --fail-fast
+          else
+            echo "No production manifest found, running full build"
+            dbt build --fail-fast
+          fi

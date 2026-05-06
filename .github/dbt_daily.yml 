@@ -1,0 +1,67 @@
+name: dbt Daily Build
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Every day at 6 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  DBT_PROFILES_DIR: ./finstack_dbt
+  DBT_PROJECT_DIR: ./finstack_dbt
+
+jobs:
+  dbt-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install dbt-core==1.7.7 dbt-bigquery==1.7.7 yfinance google-cloud-bigquery pandas db-dtypes pyarrow
+
+      - name: Create credentials file
+        run: |
+          mkdir -p credentials
+          echo '${{ secrets.GCP_SA_JSON }}' > credentials/service_account.json
+
+      - name: Create profiles.yml
+        run: |
+          cat > finstack_dbt/profiles.yml << EOF
+          finstack_dbt:
+            target: prod
+            outputs:
+              prod:
+                type: bigquery
+                method: service-account
+                database: finstack-analytics
+                schema: finstack_raw
+                keyfile: ../credentials/service_account.json
+                location: EU
+                threads: 4
+          EOF
+
+      - name: Load fresh data
+        run: python scripts/load_yfinance.py
+
+      - name: Install dbt packages
+        run: cd finstack_dbt && dbt deps
+
+      - name: Check source freshness
+        run: cd finstack_dbt && dbt source freshness || true
+
+      - name: Run dbt build
+        run: cd finstack_dbt && dbt build
+
+      - name: Upload manifest for Slim CI
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-manifest
+          path: finstack_dbt/target/manifest.json
+          retention-days: 7
