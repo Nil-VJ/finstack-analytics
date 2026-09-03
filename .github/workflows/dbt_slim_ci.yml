@@ -4,9 +4,10 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  DBT_PROFILES_DIR: ./finstack_dbt
-  DBT_PROJECT_DIR: ./finstack_dbt
+# Every dbt step does `cd finstack_dbt` first, so dbt finds dbt_project.yml
+# and profiles.yml in its working directory. Do not also set DBT_PROJECT_DIR /
+# DBT_PROFILES_DIR here: they are resolved relative to the cwd *after* the cd,
+# which made dbt look for finstack_dbt/finstack_dbt and fail.
 
 jobs:
   dbt-ci:
@@ -23,7 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install dbt-core==1.7.7 dbt-bigquery==1.7.7
+          # protobuf<5: dbt-core 1.7 breaks on protobuf 5+ (MessageToJson signature change)
+          pip install dbt-core==1.7.7 dbt-bigquery==1.7.7 "protobuf<5"
 
       - name: Create credentials file
         run: |
@@ -50,6 +52,10 @@ jobs:
         run: cd finstack_dbt && dbt deps
 
       - name: Download production manifest
+        # The next step already falls back to a full build when manifest.json is
+        # absent. continue-on-error covers the cases if_no_artifact_found doesn't:
+        # e.g. the daily workflow not yet existing on main returns a hard 404.
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v3
         with:
           name: prod-manifest
