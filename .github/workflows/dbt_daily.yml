@@ -5,9 +5,10 @@ on:
     - cron: '0 6 * * *'  # Every day at 6 AM UTC
   workflow_dispatch:  # Allow manual trigger
 
-env:
-  DBT_PROFILES_DIR: ./finstack_dbt
-  DBT_PROJECT_DIR: ./finstack_dbt
+# Every dbt step does `cd finstack_dbt` first, so dbt finds dbt_project.yml
+# and profiles.yml in its working directory. Do not also set DBT_PROJECT_DIR /
+# DBT_PROFILES_DIR here: they are resolved relative to the cwd *after* the cd,
+# which made dbt look for finstack_dbt/finstack_dbt and fail.
 
 jobs:
   dbt-build:
