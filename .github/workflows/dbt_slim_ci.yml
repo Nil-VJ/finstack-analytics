@@ -52,6 +52,10 @@ jobs:
         run: cd finstack_dbt && dbt deps
 
       - name: Download production manifest
+        # The next step already falls back to a full build when manifest.json is
+        # absent. continue-on-error covers the cases if_no_artifact_found doesn't:
+        # e.g. the daily workflow not yet existing on main returns a hard 404.
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v3
         with:
           name: prod-manifest
