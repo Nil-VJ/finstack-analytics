@@ -1,0 +1,20 @@
+snapshots:
+  - name: snp_company_info
+    description: "SCD Type 2 history of company classification. A new version is recorded when sector, industry or recommendation_key changes; market_cap is excluded because it changes every day. Lands in <target dataset>_snapshots. Grain: one row per ticker per version (dbt_valid_from)."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [ticker, dbt_valid_from]
+    columns:
+      - name: ticker
+        description: "{{ doc('ticker_description') }}"
+      - name: sector
+        description: "Yahoo Finance sector for this version"
+      - name: industry
+        description: "Yahoo Finance industry for this version"
+      - name: recommendation_key
+        description: "Analyst consensus for this version"
+      - name: dbt_valid_from
+        description: "When this version was first captured"
+      - name: dbt_valid_to
+        description: "When this version was replaced; null for the current version"

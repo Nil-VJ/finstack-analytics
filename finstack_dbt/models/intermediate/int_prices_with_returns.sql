@@ -4,30 +4,24 @@ with prices as (
 
 ),
 
-returns as (
+with_prev_close as (
 
     select
         *,
-        lag(close_price) over (
-            partition by ticker order by date
-        ) as prev_close_price,
-
-        case
-            when lag(close_price) over (
-                partition by ticker order by date
-            ) is not null
-            then round(
-                (close_price - lag(close_price) over (
-                    partition by ticker order by date
-                )) / lag(close_price) over (
-                    partition by ticker order by date
-                ) * 100,
-                4
-            )
-        end as daily_return_pct
+        lag(close_price) over (partition by ticker order by date) as prev_close_price
 
     from prices
 
+),
+
+final as (
+
+    select
+        *,
+        {{ pct_change('close_price', 'prev_close_price', precision=4) }} as daily_return_pct
+
+    from with_prev_close
+
 )
 
-select * from returns
+select * from final

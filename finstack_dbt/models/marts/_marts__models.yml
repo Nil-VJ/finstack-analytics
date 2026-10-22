@@ -1,8 +1,6 @@
-version: 2
-
 models:
   - name: dim_companies
-    description: "Company dimension table with profile information for each ticker."
+    description: "Company dimension. Grain: one row per ticker."
     columns:
       - name: ticker
         description: "{{ doc('ticker_description') }}"
@@ -12,48 +10,61 @@ models:
       - name: short_name
         description: "Company short name"
       - name: long_name
-        description: "Full legal company name"
+        description: "Full company name"
       - name: sector
-        description: "GICS sector classification"
+        description: "Sector as classified by Yahoo Finance, not official GICS. The 30 tickers fall into 7 Yahoo sectors, e.g. GOOGL and META are Communication Services."
         data_tests:
           - not_null
       - name: industry
-        description: "GICS industry classification"
+        description: "Industry as classified by Yahoo Finance"
+      - name: country
+        description: "Country of headquarters"
       - name: market_cap
-        description: "Market capitalization in USD"
+        description: "Market capitalisation in USD at the latest load"
         data_tests:
           - dbt_utils.accepted_range:
               arguments:
                 min_value: 0
+      - name: enterprise_value
+        description: "Enterprise value in USD at the latest load"
+      - name: recommendation_key
+        description: "Analyst consensus recommendation at the latest load"
 
   - name: dim_sectors
-    description: "Sector-level summary with company count and market cap aggregations."
+    description: "Sector summary built from dim_companies. Sectors are Yahoo Finance's classification (7 values in this dataset, including Communication Services). Grain: one row per sector."
     columns:
       - name: sector
-        description: "GICS sector name - primary key"
+        description: "Yahoo Finance sector name"
         data_tests:
           - not_null
           - unique
       - name: company_count
-        description: "Number of companies in this sector"
+        description: "Number of tracked companies in the sector"
       - name: total_market_cap
-        description: "Sum of market cap across all companies in sector"
+        description: "Sum of market cap across the sector's companies, USD"
       - name: avg_market_cap
-        description: "Average market cap per company in sector"
+        description: "Mean market cap per company in the sector, USD, rounded to whole dollars"
 
   - name: fct_prices_daily
-    description: "Daily stock prices with returns and moving averages. Incremental materialization."
+    description: "Daily adjusted prices with returns and moving averages. Rebuilt in full on every run (table, not incremental) because adjusted history is restated after splits and dividends. Grain: one row per ticker per trading date."
     config:
       contract:
         enforced: true
     columns:
+      - name: price_id
+        description: "Surrogate key: hash of ticker and date"
+        data_type: string
+        constraints:
+          - type: not_null
+        data_tests:
+          - unique
+          - not_null
       - name: ticker
         description: "{{ doc('ticker_description') }}"
         data_type: string
         constraints:
           - type: not_null
         data_tests:
-          - not_null
           - relationships:
               arguments:
                 to: ref('dim_companies')
@@ -63,61 +74,96 @@ models:
         data_type: date
         constraints:
           - type: not_null
-        data_tests:
-          - not_null
       - name: open_price
-        description: "Opening price"
+        description: "Adjusted opening price"
         data_type: float64
       - name: high_price
-        description: "Highest price during the day"
+        description: "Adjusted daily high"
         data_type: float64
       - name: low_price
-        description: "Lowest price during the day"
+        description: "Adjusted daily low"
         data_type: float64
       - name: close_price
-        description: "Closing price"
+        description: "{{ doc('close_price_description') }}"
         data_type: float64
         constraints:
           - type: not_null
         data_tests:
-          - not_null
           - dbt_utils.accepted_range:
               arguments:
                 min_value: 0
       - name: volume
-        description: "Number of shares traded"
+        description: "Shares traded"
         data_type: int64
         data_tests:
           - dbt_utils.accepted_range:
               arguments:
                 min_value: 0
       - name: prev_close_price
-        description: "Previous trading day closing price"
+        description: "Close of the previous trading day; null on each ticker's first day"
         data_type: float64
       - name: daily_return_pct
-        description: "Daily return as percentage"
+        description: "{{ doc('daily_return_description') }}"
         data_type: float64
       - name: sma_20
-        description: "20-day simple moving average"
+        description: "20-day simple moving average of the close; null until 20 days of history"
         data_type: float64
       - name: sma_50
-        description: "50-day simple moving average"
+        description: "50-day simple moving average of the close; null until 50 days of history"
         data_type: float64
 
   - name: fct_returns
-    description: "Monthly aggregated return metrics per ticker."
+    description: "Monthly price summary per ticker. The latest month is month-to-date. Grain: one row per ticker per month."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [ticker, month]
     columns:
       - name: ticker
         description: "{{ doc('ticker_description') }}"
-        data_tests:
-          - not_null
       - name: month
-        description: "First day of the month"
-        data_tests:
-          - not_null
+        description: "First day of the calendar month"
       - name: trading_days
         description: "Number of trading days in the month"
-      - name: avg_daily_return_pct
-        description: "Average daily return percentage for the month"
+      - name: month_low
+        description: "Lowest adjusted low_price in the month"
+      - name: month_high
+        description: "Highest adjusted high_price in the month"
       - name: total_volume
-        description: "Total shares traded during the month"
+        description: "Shares traded in the month"
+      - name: monthly_return_pct
+        description: "(last close of the month / last close of the previous month - 1) * 100, rounded to 2 decimals. Null for each ticker's first month."
+
+  - name: fct_financials_quarterly
+    description: "Quarterly income statement facts with QoQ revenue growth and margins. History grows over time because raw_financials is append-only. Grain: one row per ticker per quarter_date."
+    columns:
+      - name: financials_id
+        description: "Surrogate key: hash of ticker and quarter_date"
+        data_tests:
+          - unique
+          - not_null
+      - name: ticker
+        description: "{{ doc('ticker_description') }}"
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_companies')
+                field: ticker
+      - name: quarter_date
+        description: "Fiscal quarter end date"
+      - name: total_revenue
+        description: "Total revenue for the quarter"
+      - name: gross_profit
+        description: "Gross profit for the quarter. Null for banks and insurers (BAC, BRK-B, GS, JPM): yfinance reports no gross profit for them."
+      - name: operating_income
+        description: "Operating income for the quarter"
+      - name: net_income
+        description: "Net income for the quarter"
+      - name: ebitda
+        description: "EBITDA for the quarter"
+      - name: revenue_growth_pct
+        description: "QoQ revenue change in percent; null unless the previous quarter is 80-100 days earlier"
+      - name: gross_margin_pct
+        description: "gross_profit / total_revenue * 100 for this quarter (null for banks and insurers). For multi-row analysis use the gross_margin_pct metric, which is a ratio of sums."
+      - name: net_margin_pct
+        description: "net_income / total_revenue * 100 for this quarter. For multi-row analysis use the net_margin_pct metric, which is a ratio of sums."

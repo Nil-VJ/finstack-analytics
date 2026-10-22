@@ -4,48 +4,39 @@ with financials as (
 
 ),
 
-with_growth as (
+with_prev_quarter as (
 
     select
         *,
-        lag(total_revenue) over (
-            partition by ticker order by quarter_date
-        ) as prev_quarter_revenue,
-
-        case
-            when lag(total_revenue) over (
-                partition by ticker order by quarter_date
-            ) is not null and lag(total_revenue) over (
-                partition by ticker order by quarter_date
-            ) != 0
-            then round(
-                (total_revenue - lag(total_revenue) over (
-                    partition by ticker order by quarter_date
-                )) / lag(total_revenue) over (
-                    partition by ticker order by quarter_date
-                ) * 100,
-                2
-            )
-        end as revenue_growth_pct,
-
-        case
-            when total_revenue is not null and total_revenue != 0
-            then round(
-                cast(gross_profit as float64) / cast(total_revenue as float64) * 100,
-                2
-            )
-        end as gross_margin_pct,
-
-        case
-            when total_revenue is not null and total_revenue != 0
-            then round(
-                cast(net_income as float64) / cast(total_revenue as float64) * 100,
-                2
-            )
-        end as net_margin_pct
+        lag(quarter_date) over by_ticker as prev_quarter_date,
+        lag(total_revenue) over by_ticker as prev_quarter_revenue
 
     from financials
+    window by_ticker as (partition by ticker order by quarter_date)
+
+),
+
+final as (
+
+    select
+        ticker,
+        quarter_date,
+        total_revenue,
+        gross_profit,
+        operating_income,
+        net_income,
+        ebitda,
+        -- Only a true quarter-over-quarter change: the previous row must be the previous
+        -- quarter (80-100 days earlier), not an older quarter after a gap in the data.
+        case
+            when date_diff(quarter_date, prev_quarter_date, day) between 80 and 100
+            then {{ pct_change('total_revenue', 'prev_quarter_revenue') }}
+        end as revenue_growth_pct,
+        round(safe_divide(gross_profit, total_revenue) * 100, 2) as gross_margin_pct,
+        round(safe_divide(net_income, total_revenue) * 100, 2) as net_margin_pct
+
+    from with_prev_quarter
 
 )
 
-select * from with_growth
+select * from final

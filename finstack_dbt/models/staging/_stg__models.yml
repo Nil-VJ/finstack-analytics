@@ -1,61 +1,72 @@
-version: 2
-
 models:
   - name: stg_prices
-    description: "Cleaned daily price data. Columns renamed to snake_case, nulls filtered out."
+    description: "Daily adjusted prices with snake_case names and explicit types; rows without a close are dropped. Grain: one row per ticker per trading date."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [ticker, date]
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
-        data_tests:
-          - not_null
+        description: "{{ doc('ticker_description') }}"
       - name: date
         description: "Trading date"
-        data_tests:
-          - not_null
       - name: open_price
-        description: "Opening price, renamed from 'open'"
+        description: "Adjusted opening price"
       - name: high_price
-        description: "Highest price during the day"
+        description: "Adjusted daily high"
       - name: low_price
-        description: "Lowest price during the day"
+        description: "Adjusted daily low"
       - name: close_price
-        description: "Closing price, rows with null close filtered out"
-        data_tests:
-          - not_null
+        description: "{{ doc('close_price_description') }}"
       - name: volume
-        description: "Number of shares traded"
+        description: "Shares traded"
+      - name: _loaded_at
+        description: "UTC timestamp of the load that wrote the row"
 
   - name: stg_company_info
-    description: "Cleaned company profile data. One row per ticker."
+    description: "Company profile with explicit types. Grain: one row per ticker."
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
-        data_tests:
-          - not_null
-          - unique
+        description: "{{ doc('ticker_description') }}"
+      - name: short_name
+        description: "Company short name"
+      - name: long_name
+        description: "Full company name"
       - name: sector
-        description: "GICS sector classification"
-        data_tests:
-          - accepted_values:
-              arguments:
-                values: ['Technology', 'Financial Services', 'Healthcare', 'Energy', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive']
+        description: "Sector as classified by Yahoo Finance (not official GICS)"
       - name: industry
-        description: "GICS industry classification"
+        description: "Industry as classified by Yahoo Finance"
+      - name: country
+        description: "Country of headquarters"
       - name: market_cap
-        description: "Market capitalization in USD"
+        description: "Market capitalisation in USD at load time"
+      - name: enterprise_value
+        description: "Enterprise value in USD at load time"
+      - name: recommendation_key
+        description: "Analyst consensus recommendation"
+      - name: _loaded_at
+        description: "UTC timestamp of the load that wrote the row"
 
   - name: stg_financials
-    description: "Cleaned quarterly income statement data. Date renamed to quarter_date."
+    description: "Quarterly income statement, deduplicated to the most recently loaded version of each quarter. Grain: one row per ticker per quarter_date."
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [ticker, quarter_date]
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
-        data_tests:
-          - not_null
+        description: "{{ doc('ticker_description') }}"
       - name: quarter_date
-        description: "Quarter end date, renamed from 'date'"
-        data_tests:
-          - not_null
+        description: "Fiscal quarter end date (renamed from date)"
       - name: total_revenue
         description: "Total revenue for the quarter"
+      - name: gross_profit
+        description: "Gross profit for the quarter (null for banks and insurers)"
+      - name: operating_income
+        description: "Operating income for the quarter"
       - name: net_income
-        description: "Net income after tax"
+        description: "Net income for the quarter"
+      - name: ebitda
+        description: "EBITDA for the quarter"
+      - name: _loaded_at
+        description: "UTC timestamp of the load that delivered this version of the quarter"

@@ -18,6 +18,18 @@ renamed as (
 
     from source
 
+),
+
+-- raw_financials is append-only: each load re-sends the quarters Yahoo still exposes.
+-- Keep the most recently loaded version of each quarter.
+final as (
+
+    select * from renamed
+    qualify row_number() over (
+        partition by ticker, quarter_date
+        order by _loaded_at desc
+    ) = 1
+
 )
 
-select * from renamed
+select * from final
