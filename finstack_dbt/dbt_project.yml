@@ -2,28 +2,20 @@ name: finstack_dbt
 
 profile: finstack_dbt
 
-seed-paths: ["seeds"]
 model-paths: ["models"]
 macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
 docs-paths: ["docs"]
 clean-targets:
   - "target"
   - "dbt_packages"
 
-seeds:
-  # Builds seeds into '<your_schema_name>_raw'
-  finstack_dbt:
-    +schema: seeds
-
 models:
   finstack_dbt:
-    +static_analysis: strict
     staging:
       +materialized: view
-      +access: protected
     intermediate:
       +materialized: view
-      +access: protected
     marts:
       +materialized: table
-      +access: public

@@ -3,12 +3,10 @@ version: 2
 models:
   - name: dim_companies
     description: "Company dimension table with profile information for each ticker."
-    config:
-      group: finance
     columns:
       - name: ticker
         description: "{{ doc('ticker_description') }}"
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: short_name
@@ -17,23 +15,23 @@ models:
         description: "Full legal company name"
       - name: sector
         description: "GICS sector classification"
-        tests:
+        data_tests:
           - not_null
       - name: industry
         description: "GICS industry classification"
       - name: market_cap
         description: "Market capitalization in USD"
-        tests:
-          - positive_value
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
 
   - name: dim_sectors
     description: "Sector-level summary with company count and market cap aggregations."
-    config:
-      group: finance
     columns:
       - name: sector
-        description: "GICS sector name - primary key" 
-        tests:
+        description: "GICS sector name - primary key"
+        data_tests:
           - not_null
           - unique
       - name: company_count
@@ -46,7 +44,6 @@ models:
   - name: fct_prices_daily
     description: "Daily stock prices with returns and moving averages. Incremental materialization."
     config:
-      group: finance
       contract:
         enforced: true
     columns:
@@ -55,17 +52,18 @@ models:
         data_type: string
         constraints:
           - type: not_null
-        tests:
+        data_tests:
           - not_null
           - relationships:
-              to: ref('dim_companies')
-              field: ticker
+              arguments:
+                to: ref('dim_companies')
+                field: ticker
       - name: date
         description: "Trading date"
         data_type: date
         constraints:
           - type: not_null
-        tests:
+        data_tests:
           - not_null
       - name: open_price
         description: "Opening price"
@@ -81,16 +79,18 @@ models:
         data_type: float64
         constraints:
           - type: not_null
-        tests:
+        data_tests:
           - not_null
-          - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
       - name: volume
         description: "Number of shares traded"
         data_type: int64
-        tests:
-          - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
       - name: prev_close_price
         description: "Previous trading day closing price"
         data_type: float64
@@ -103,19 +103,17 @@ models:
       - name: sma_50
         description: "50-day simple moving average"
         data_type: float64
- 
+
   - name: fct_returns
     description: "Monthly aggregated return metrics per ticker."
-    config:
-      group: finance
     columns:
       - name: ticker
         description: "{{ doc('ticker_description') }}"
-        tests:
+        data_tests:
           - not_null
       - name: month
         description: "First day of the month"
-        tests:
+        data_tests:
           - not_null
       - name: trading_days
         description: "Number of trading days in the month"

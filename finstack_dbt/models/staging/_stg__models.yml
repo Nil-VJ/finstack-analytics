@@ -6,11 +6,11 @@ models:
     columns:
       - name: ticker
         description: "Stock ticker symbol"
-        tests:
+        data_tests:
           - not_null
       - name: date
         description: "Trading date"
-        tests:
+        data_tests:
           - not_null
       - name: open_price
         description: "Opening price, renamed from 'open'"
@@ -20,7 +20,7 @@ models:
         description: "Lowest price during the day"
       - name: close_price
         description: "Closing price, rows with null close filtered out"
-        tests:
+        data_tests:
           - not_null
       - name: volume
         description: "Number of shares traded"
@@ -30,14 +30,15 @@ models:
     columns:
       - name: ticker
         description: "Stock ticker symbol"
-        tests:
+        data_tests:
           - not_null
           - unique
       - name: sector
         description: "GICS sector classification"
-        tests:
+        data_tests:
           - accepted_values:
-              values: ['Technology', 'Financial Services', 'Healthcare', 'Energy', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive']
+              arguments:
+                values: ['Technology', 'Financial Services', 'Healthcare', 'Energy', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive']
       - name: industry
         description: "GICS industry classification"
       - name: market_cap
@@ -48,11 +49,11 @@ models:
     columns:
       - name: ticker
         description: "Stock ticker symbol"
-        tests:
+        data_tests:
           - not_null
       - name: quarter_date
         description: "Quarter end date, renamed from 'date'"
-        tests:
+        data_tests:
           - not_null
       - name: total_revenue
         description: "Total revenue for the quarter"
