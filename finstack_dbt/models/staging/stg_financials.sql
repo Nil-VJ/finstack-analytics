@@ -21,13 +21,15 @@ renamed as (
 ),
 
 -- raw_financials is append-only: each load re-sends the quarters Yahoo still exposes.
--- Keep the most recently loaded version of each quarter.
+-- Keep the most recently loaded version of each quarter. Yahoo often returns the oldest
+-- quarter of a fetch with every value null, so a version that has revenue wins over a
+-- newer all-null one.
 final as (
 
     select * from renamed
     qualify row_number() over (
         partition by ticker, quarter_date
-        order by _loaded_at desc
+        order by total_revenue is null, _loaded_at desc
     ) = 1
 
 )

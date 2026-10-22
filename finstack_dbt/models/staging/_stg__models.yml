@@ -48,7 +48,7 @@ models:
         description: "UTC timestamp of the load that wrote the row"
 
   - name: stg_financials
-    description: "Quarterly income statement, deduplicated to the most recently loaded version of each quarter. Grain: one row per ticker per quarter_date."
+    description: "Quarterly income statement, deduplicated to the most recently loaded version of each quarter that has revenue (falling back to the latest version if none has). Grain: one row per ticker per quarter_date."
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
