@@ -1,0 +1,15 @@
+semantic_models:
+  - name: companies
+    description: "One row per company, from dim_companies."
+    model: ref('dim_companies')
+
+    entities:
+      - name: company
+        type: primary
+        expr: ticker
+
+    dimensions:
+      - name: sector
+        type: categorical
+      - name: industry
+        type: categorical

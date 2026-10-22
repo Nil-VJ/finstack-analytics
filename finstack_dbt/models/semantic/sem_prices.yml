@@ -1,0 +1,30 @@
+semantic_models:
+  - name: prices
+    description: "One row per ticker per trading date, from fct_prices_daily."
+    model: ref('fct_prices_daily')
+    defaults:
+      agg_time_dimension: date
+
+    entities:
+      - name: price
+        type: primary
+        expr: price_id
+      - name: company
+        type: foreign
+        expr: ticker
+
+    dimensions:
+      - name: date
+        type: time
+        type_params:
+          time_granularity: day
+
+    measures:
+      - name: total_volume
+        description: "Shares traded"
+        agg: sum
+        expr: volume
+      - name: avg_daily_return
+        description: "Mean of daily_return_pct over the rows in the group"
+        agg: average
+        expr: daily_return_pct

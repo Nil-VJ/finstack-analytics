@@ -1,0 +1,32 @@
+semantic_models:
+  - name: financials
+    description: "One row per ticker per fiscal quarter, from fct_financials_quarterly."
+    model: ref('fct_financials_quarterly')
+    defaults:
+      agg_time_dimension: quarter_date
+
+    entities:
+      - name: financial_quarter
+        type: primary
+        expr: financials_id
+      - name: company
+        type: foreign
+        expr: ticker
+
+    dimensions:
+      - name: quarter_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: has_gross_profit
+        description: "False for banks and insurers, for which yfinance reports no gross profit"
+        type: categorical
+        expr: gross_profit is not null
+
+    measures:
+      - name: total_revenue
+        agg: sum
+      - name: gross_profit
+        agg: sum
+      - name: net_income
+        agg: sum
