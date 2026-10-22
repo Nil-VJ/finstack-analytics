@@ -1,0 +1,64 @@
+name: Prod refresh
+
+# Manual only. Loading is not scheduled because Yahoo Finance often rate-limits or
+# blocks GitHub runner IPs. If that happens, run the loader locally and then run this
+# workflow with load_data unticked to rebuild prod from the data already in finstack_raw.
+on:
+  workflow_dispatch:
+    inputs:
+      load_data:
+        description: "Load fresh data from Yahoo Finance before building"
+        type: boolean
+        default: true
+
+# Every dbt step does `cd finstack_dbt` first, so dbt finds dbt_project.yml
+# and profiles.yml in its working directory. Do not also set DBT_PROJECT_DIR /
+# DBT_PROFILES_DIR here: they are resolved relative to the cwd *after* the cd,
+# which made dbt look for finstack_dbt/finstack_dbt and fail.
+
+jobs:
+  prod-refresh:
+    runs-on: ubuntu-latest
+    env:
+      DBT_TARGET: prod
+      DBT_KEYFILE: ${{ github.workspace }}/credentials/service_account.json
+      GCP_PROJECT_ID: finstack-analytics
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write service account key
+        env:
+          GCP_SA_JSON: ${{ secrets.GCP_SA_JSON }}
+        run: |
+          mkdir -p credentials
+          printf '%s' "$GCP_SA_JSON" > credentials/service_account.json
+
+      - name: Load data from Yahoo Finance
+        if: ${{ inputs.load_data }}
+        run: python scripts/load_yfinance.py
+
+      - name: Install dbt packages
+        run: cd finstack_dbt && dbt deps
+
+      - name: Check source freshness (warn only)
+        run: cd finstack_dbt && dbt source freshness
+
+      - name: Build prod
+        run: cd finstack_dbt && dbt build --target prod
+
+      - name: Upload manifest for Slim CI
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-manifest
+          path: finstack_dbt/target/manifest.json
+          retention-days: 90
