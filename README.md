@@ -89,6 +89,7 @@ To load real data without touching the prod raw dataset, run `RAW_DATASET=finsta
 ## Limitations and what changes at scale
 
 - Yahoo Finance is an unofficial source. It has no SLA, rate-limits aggressively, and its fields can change without notice. A production version would use a licensed market-data feed.
+- Sector-quarter totals depend on which companies Yahoo returned for that quarter. The oldest and newest quarters are often incomplete, so compare sectors only where all their companies reported.
 - Fundamentals history only starts from the first load. Earlier quarters are not backfilled.
 - Prices are fully rebuilt on every run. That's fine at 30 tickers. At thousands of tickers I would store unadjusted prices plus corporate actions and go incremental.
 - CI shares one `finstack_ci` dataset, so two PRs running at the same time can overwrite each other's tables. Per-PR datasets would fix that.
