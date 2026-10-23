@@ -1,3 +1,5 @@
+-- Coverage caveat: Yahoo does not return every company for every quarter. The oldest and
+-- newest quarters are often incomplete, so sector-level sums can dip without a real change.
 with financials as (
 
     select * from {{ ref('int_financials_quarterly') }}
