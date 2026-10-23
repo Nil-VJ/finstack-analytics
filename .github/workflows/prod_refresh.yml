@@ -1,7 +1,7 @@
 name: Prod refresh
 
-# Manual only. Loading is not scheduled because Yahoo Finance often rate-limits or
-# blocks GitHub runner IPs. If that happens, run the loader locally and then run this
+# Manual only. Loading is not scheduled because Yahoo Finance can rate-limit
+# GitHub runner IPs. If that happens, run the loader locally and then run this
 # workflow with load_data unticked to rebuild prod from the data already in finstack_raw.
 on:
   workflow_dispatch:

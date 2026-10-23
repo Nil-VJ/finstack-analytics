@@ -164,6 +164,6 @@ models:
       - name: revenue_growth_pct
         description: "QoQ revenue change in percent; null unless the previous quarter is 80-100 days earlier"
       - name: gross_margin_pct
-        description: "gross_profit / total_revenue * 100 for this quarter (null for banks and insurers). For multi-row analysis use the gross_margin_pct metric, which is a ratio of sums."
+        description: "gross_profit / total_revenue * 100 for this quarter (null for banks and insurers). For multi-row analysis use the gross_margin metric, which is a ratio of sums."
       - name: net_margin_pct
-        description: "net_income / total_revenue * 100 for this quarter. For multi-row analysis use the net_margin_pct metric, which is a ratio of sums."
+        description: "net_income / total_revenue * 100 for this quarter. For multi-row analysis use the net_margin metric, which is a ratio of sums."

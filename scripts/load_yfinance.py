@@ -232,12 +232,13 @@ def main():
             "raw_financials",
             bigquery.LoadJobConfig(
                 write_disposition="WRITE_APPEND",
-                # Explicit schema: an all-null metric column would otherwise be inferred as INT64
-                # or NULL and break the append against the existing FLOAT64 column.
+                # Explicit schema matching finstack_raw.raw_financials as `bq show` reports it
+                # (metrics FLOAT, all NULLABLE). Without it an all-null metric column could be
+                # inferred as another type and the append would fail.
                 schema=[
                     bigquery.SchemaField("ticker", "STRING"),
                     bigquery.SchemaField("date", "DATE"),
-                    *[bigquery.SchemaField(c, "FLOAT64") for c in FINANCIAL_METRICS.values()],
+                    *[bigquery.SchemaField(c, "FLOAT") for c in FINANCIAL_METRICS.values()],
                     bigquery.SchemaField("_loaded_at", "TIMESTAMP"),
                 ],
             ),

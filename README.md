@@ -44,7 +44,7 @@ Datasets: raw data stays in `finstack_raw`. dbt builds into `finstack_dev`, `fin
 
 **SCD-2 snapshot without market cap.** `snp_company_info` records a new version when a company's sector, industry or analyst recommendation changes. `market_cap` is excluded because it moves every day and would turn the snapshot into a price log.
 
-**Ratio metrics, not averaged percentages.** `gross_margin_pct` and `net_margin_pct` are MetricFlow ratio metrics, `sum(numerator) / sum(revenue)`, so a sector or a year is weighted by revenue. They are never an average of per-quarter percentages. Banks and insurers have no gross profit in Yahoo's data, so their revenue is left out of the gross-margin denominator rather than diluting it. The trade-off is that the Financial Services gross margin reflects Visa only, the one company in that sector that reports gross profit.
+**Ratio metrics, not averaged percentages.** `gross_margin` and `net_margin` are MetricFlow ratio metrics, `sum(numerator) / sum(revenue)`, returned as fractions (0.68 = 68%), so a sector or a year is weighted by revenue. They are never an average of per-quarter percentages. Banks and insurers have no gross profit in Yahoo's data, so their revenue is left out of the gross-margin denominator rather than diluting it. The trade-off is that the Financial Services gross margin reflects Visa only, the one company in that sector that reports gross profit.
 
 **A contract on the main fact.** `fct_prices_daily` has an enforced dbt contract: column names, types and not-null constraints. A change that breaks its shape fails the build instead of silently changing what consumers see.
 
@@ -63,7 +63,7 @@ Datasets: raw data stays in `finstack_raw`. dbt builds into `finstack_dev`, `fin
 ## CI/CD
 
 - **Slim CI** (`dbt_slim_ci.yml`) runs on every pull request. It downloads the manifest from the last prod run and builds only `state:modified+` into `finstack_ci`, deferring unchanged parents to prod. If no prod manifest exists yet, it runs a full build.
-- **Prod refresh** (`prod_refresh.yml`) is manual only. It optionally runs the loader, checks freshness, builds prod and uploads the manifest for Slim CI. It is not on a schedule because Yahoo often rate-limits or blocks GitHub runner IPs. When that happens, run the loader locally and start the workflow with `load_data` unticked.
+- **Prod refresh** (`prod_refresh.yml`) is manual only. It optionally runs the loader, checks freshness, builds prod and uploads the manifest for Slim CI. It is not on a schedule because Yahoo can rate-limit GitHub runner IPs. When that happens, run the loader locally and start the workflow with `load_data` unticked.
 
 ## Run it locally
 
@@ -81,7 +81,7 @@ python scripts/load_yfinance.py --dry-run  # fetch + validate, writes nothing
 cd finstack_dbt
 dbt deps
 dbt build                                  # into finstack_dev and finstack_dev_snapshots
-mf query --metrics revenue,gross_margin_pct --group-by metric_time__quarter,company__sector
+mf query --metrics revenue,gross_margin --group-by metric_time__quarter,company__sector
 ```
 
 To load real data without touching the prod raw dataset, run `RAW_DATASET=finstack_raw_dev python scripts/load_yfinance.py`, then build against it with `dbt build --vars '{raw_dataset: finstack_raw_dev}'`.

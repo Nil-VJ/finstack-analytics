@@ -20,8 +20,8 @@ metrics:
     type_params:
       measure: total_revenue
 
-  - name: gross_margin_pct
-    label: "Gross margin %"
+  - name: gross_margin
+    label: "Gross margin"
     description: "sum(gross_profit) / sum(total_revenue), returned as a fraction (0.45 = 45%). A ratio of sums, never an average of per-quarter margins. Revenue of quarters without gross profit (banks, insurers) is left out of the denominator so it cannot dilute the margin."
     type: ratio
     type_params:
@@ -30,8 +30,8 @@ metrics:
         name: revenue
         filter: "{{ Dimension('financial_quarter__has_gross_profit') }}"
 
-  - name: net_margin_pct
-    label: "Net margin %"
+  - name: net_margin
+    label: "Net margin"
     description: "sum(net_income) / sum(total_revenue), returned as a fraction (0.25 = 25%). A ratio of sums, never an average of per-quarter margins."
     type: ratio
     type_params:
