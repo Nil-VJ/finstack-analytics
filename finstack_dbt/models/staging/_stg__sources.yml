@@ -1,81 +1,74 @@
-version: 2
-
 sources:
   - name: finstack_raw
-    database: finstack-analytics
-    schema: finstack_raw
-    description: "Raw stock market data loaded from Yahoo Finance via yfinance Python library."
+    description: "Raw Yahoo Finance data written by scripts/load_yfinance.py. Loading is manual, so freshness only warns."
+    database: "{{ env_var('GCP_PROJECT_ID', 'finstack-analytics') }}"
+    schema: "{{ var('raw_dataset', 'finstack_raw') }}"
     config:
       loaded_at_field: _loaded_at
       freshness:
-        warn_after: { count: 36, period: hour }
-        error_after: { count: 48, period: hour }
+        warn_after: {count: 7, period: day}
 
     tables:
       - name: raw_prices
-        description: "Daily OHLCV price data for 30 S&P 500 stocks, 5 years of history."
+        description: "Daily split- and dividend-adjusted OHLCV (yfinance auto_adjust=True) for 30 S&P 500 tickers, 5 years. Truncated and reloaded on every load."
         columns:
           - name: ticker
-            description: "Stock ticker symbol (e.g., AAPL, MSFT)"
+            description: "Stock ticker symbol (e.g. AAPL)"
           - name: date
             description: "Trading date"
           - name: open
-            description: "Opening price for the trading day"
+            description: "Adjusted opening price"
           - name: high
-            description: "Highest price during the trading day"
+            description: "Adjusted daily high"
           - name: low
-            description: "Lowest price during the trading day"
+            description: "Adjusted daily low"
           - name: close
-            description: "Closing price for the trading day"
+            description: "Adjusted closing price"
           - name: volume
-            description: "Number of shares traded"
-          - name: dividends
-            description: "Dividend paid on this date (0 if none)"
-          - name: stock_splits
-            description: "Stock split ratio (0 if none)"
+            description: "Shares traded"
           - name: _loaded_at
-            description: "Timestamp when the row was loaded into BigQuery"
+            description: "UTC timestamp of the load that wrote the row"
 
       - name: raw_company_info
-        description: "Company profile data, one row per ticker. Overwritten on each load."
+        description: "Company profile, one row per ticker. Truncated and reloaded on every load."
         columns:
           - name: ticker
             description: "Stock ticker symbol"
           - name: short_name
             description: "Company short name"
           - name: long_name
-            description: "Full legal company name"
+            description: "Full company name"
           - name: sector
-            description: "GICS sector classification (e.g., Technology, Healthcare)"
+            description: "Sector as classified by Yahoo Finance (not official GICS)"
           - name: industry
-            description: "GICS industry classification"
+            description: "Industry as classified by Yahoo Finance"
           - name: country
             description: "Country of headquarters"
           - name: market_cap
-            description: "Market capitalization in USD"
+            description: "Market capitalisation in USD at load time"
           - name: enterprise_value
-            description: "Enterprise value in USD"
+            description: "Enterprise value in USD at load time"
           - name: recommendation_key
-            description: "Analyst consensus recommendation (buy, hold, sell)"
+            description: "Analyst consensus (e.g. buy, hold, strong_buy, none)"
           - name: _loaded_at
-            description: "Timestamp when the row was loaded into BigQuery"
+            description: "UTC timestamp of the load that wrote the row"
 
       - name: raw_financials
-        description: "Quarterly income statement data for each ticker."  
+        description: "Quarterly income statement lines. Append-only: each load adds the quarters Yahoo currently exposes, so the same quarter can appear several times. Deduplicated in stg_financials."
         columns:
           - name: ticker
             description: "Stock ticker symbol"
           - name: date
-            description: "Quarter end date"
+            description: "Fiscal quarter end date"
           - name: total_revenue
             description: "Total revenue for the quarter"
           - name: gross_profit
-            description: "Gross profit for the quarter"
+            description: "Gross profit for the quarter (null for banks and insurers)"
           - name: operating_income
-            description: "Operating income (EBIT) for the quarter"
+            description: "Operating income for the quarter"
           - name: net_income
-            description: "Net income after tax for the quarter"
+            description: "Net income for the quarter"
           - name: ebitda
-            description: "Earnings before interest, tax, depreciation, and amortization"
+            description: "EBITDA for the quarter"
           - name: _loaded_at
-            description: "Timestamp when the row was loaded into BigQuery"
+            description: "UTC timestamp of the load that wrote the row"

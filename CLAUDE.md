@@ -44,7 +44,7 @@ dbt parse                                  # must show zero deprecation warnings
 dbt build --target dev                     # models + snapshot + tests into finstack_dev
 dbt build --target dev --vars '{raw_dataset: finstack_raw_dev}'   # build against the dev raw copy
 mf validate-configs
-mf query --metrics revenue,gross_margin_pct --group-by metric_time__quarter,company__sector
+mf query --metrics revenue,gross_margin --group-by metric_time__quarter,company__sector
 ```
 
 Loader, run from the repo root:

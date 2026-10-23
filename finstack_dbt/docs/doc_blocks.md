@@ -1,11 +1,11 @@
 {% docs ticker_description %}
-Stock ticker symbol — a short abbreviation used to uniquely identify publicly traded shares of a company (e.g., AAPL for Apple, MSFT for Microsoft).
+Stock ticker symbol, e.g. AAPL for Apple or BRK-B for Berkshire Hathaway class B.
 {% enddocs %}
 
 {% docs close_price_description %}
-The closing price is the last price at which the stock traded during a regular trading session. It is the most commonly referenced price for daily analysis.
+Closing price of the regular session, adjusted for splits and dividends (yfinance `auto_adjust=True`). Because it is adjusted, the whole history can be restated after a split or dividend.
 {% enddocs %}
 
 {% docs daily_return_description %}
-Daily return percentage calculated as: (close - previous_close) / previous_close * 100. Represents the day-over-day price change as a percentage.
+Day-over-day change of the adjusted close in percent: (close - previous close) / previous close * 100, rounded to 4 decimals. Null on each ticker's first trading day.
 {% enddocs %}

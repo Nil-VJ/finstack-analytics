@@ -1,42 +1,38 @@
-version: 2
-
 models:
   - name: int_prices_with_returns
-    description: "Enriches daily prices with previous day close and daily return percentage using LAG window function."
+    description: "stg_prices plus the previous trading day's close and the daily return. Grain: one row per ticker per trading date."
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
+        description: "{{ doc('ticker_description') }}"
       - name: date
         description: "Trading date"
-      - name: close_price
-        description: "Closing price for the trading day"
       - name: prev_close_price
-        description: "Previous trading day closing price (via LAG)"
+        description: "Close of the previous trading day for the same ticker; null on the first day"
       - name: daily_return_pct
-        description: "Daily return as percentage: (close - prev_close) / prev_close * 100"
+        description: "{{ doc('daily_return_description') }}"
 
   - name: int_prices_moving_averages
-    description: "Adds 20-day and 50-day simple moving averages (SMA) to daily prices with returns."
+    description: "Daily prices and returns plus 20- and 50-day simple moving averages of the close. Grain: one row per ticker per trading date."
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
+        description: "{{ doc('ticker_description') }}"
       - name: date
         description: "Trading date"
       - name: sma_20
-        description: "20-day simple moving average of closing price"
+        description: "Average close over the last 20 trading days, rounded to 2 decimals; null until the ticker has 20 days of history"
       - name: sma_50
-        description: "50-day simple moving average of closing price"
+        description: "Average close over the last 50 trading days, rounded to 2 decimals; null until the ticker has 50 days of history"
 
   - name: int_financials_quarterly
-    description: "Enriches quarterly financials with quarter-over-quarter revenue growth and margin calculations."
+    description: "Quarterly financials plus QoQ revenue growth and per-quarter margins. Grain: one row per ticker per quarter_date."
     columns:
       - name: ticker
-        description: "Stock ticker symbol"
+        description: "{{ doc('ticker_description') }}"
       - name: quarter_date
-        description: "Quarter end date"
+        description: "Fiscal quarter end date"
       - name: revenue_growth_pct
-        description: "Quarter-over-quarter revenue growth as percentage"
+        description: "Revenue change vs. the previous quarter, in percent. Null unless the previous row is 80-100 days earlier, so a gap in the data never produces a fake QoQ figure."
       - name: gross_margin_pct
-        description: "Gross profit as percentage of total revenue"
+        description: "gross_profit / total_revenue * 100 for this quarter. Null for banks and insurers (BAC, BRK-B, GS, JPM): yfinance reports no gross profit for them."
       - name: net_margin_pct
-        description: "Net income as percentage of total revenue"
+        description: "net_income / total_revenue * 100 for this quarter"

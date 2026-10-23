@@ -12,6 +12,10 @@ on:
 jobs:
   dbt-ci:
     runs-on: ubuntu-latest
+    env:
+      DBT_TARGET: ci
+      DBT_KEYFILE: ${{ github.workspace }}/credentials/service_account.json
+      GCP_PROJECT_ID: finstack-analytics
 
     steps:
       - name: Checkout code
@@ -20,33 +24,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install dependencies
-        run: |
-          # protobuf<5: dbt-core 1.7 breaks on protobuf 5+ (MessageToJson signature change)
-          pip install dbt-core==1.7.7 dbt-bigquery==1.7.7 "protobuf<5"
+        run: pip install -r requirements.txt
 
-      - name: Create credentials file
+      - name: Write service account key
+        env:
+          GCP_SA_JSON: ${{ secrets.GCP_SA_JSON }}
         run: |
           mkdir -p credentials
-          echo '${{ secrets.GCP_SA_JSON }}' > credentials/service_account.json
-
-      - name: Create profiles.yml
-        run: |
-          cat > finstack_dbt/profiles.yml << EOF
-          finstack_dbt:
-            target: ci
-            outputs:
-              ci:
-                type: bigquery
-                method: service-account
-                database: finstack-analytics
-                schema: finstack_raw_ci
-                keyfile: ../credentials/service_account.json
-                location: EU
-                threads: 4
-          EOF
+          printf '%s' "$GCP_SA_JSON" > credentials/service_account.json
 
       - name: Install dbt packages
         run: cd finstack_dbt && dbt deps
@@ -54,13 +42,13 @@ jobs:
       - name: Download production manifest
         # The next step already falls back to a full build when manifest.json is
         # absent. continue-on-error covers the cases if_no_artifact_found doesn't:
-        # e.g. the daily workflow not yet existing on main returns a hard 404.
+        # e.g. the prod workflow not yet existing on main returns a hard 404.
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v3
         with:
           name: prod-manifest
           path: finstack_dbt/prod-state
-          workflow: dbt_daily.yml
+          workflow: prod_refresh.yml
           branch: main
           if_no_artifact_found: warn
 

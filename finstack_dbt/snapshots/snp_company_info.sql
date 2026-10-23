@@ -2,10 +2,10 @@
 
 {{
     config(
-        target_schema='finstack_raw',
+        schema='snapshots',
         unique_key='ticker',
         strategy='check',
-        check_cols=['sector', 'industry', 'market_cap', 'recommendation_key']
+        check_cols=['sector', 'industry', 'recommendation_key']
     )
 }}
 

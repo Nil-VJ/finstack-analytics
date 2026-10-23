@@ -4,21 +4,45 @@ with daily as (
 
 ),
 
-monthly_returns as (
+monthly as (
 
     select
         ticker,
-        date_trunc(date, MONTH) as month,
+        date_trunc(date, month) as month,
         count(*) as trading_days,
-        round(avg(daily_return_pct), 4) as avg_daily_return_pct,
-        round(min(close_price), 2) as month_low,
-        round(max(close_price), 2) as month_high,
-        round(sum(volume), 0) as total_volume
+        min(low_price) as month_low,
+        max(high_price) as month_high,
+        sum(volume) as total_volume,
+        array_agg(close_price order by date desc limit 1)[offset(0)] as month_close
 
     from daily
-    where daily_return_pct is not null
-    group by ticker, date_trunc(date, MONTH)
+    group by ticker, month
+
+),
+
+with_prev_month as (
+
+    select
+        *,
+        lag(month_close) over (partition by ticker order by month) as prev_month_close
+
+    from monthly
+
+),
+
+final as (
+
+    select
+        ticker,
+        month,
+        trading_days,
+        month_low,
+        month_high,
+        total_volume,
+        {{ pct_change('month_close', 'prev_month_close') }} as monthly_return_pct
+
+    from with_prev_month
 
 )
 
-select * from monthly_returns
+select * from final

@@ -1,0 +1,55 @@
+metrics:
+  - name: trading_volume
+    label: "Trading volume"
+    description: "Total shares traded"
+    type: simple
+    type_params:
+      measure: total_volume
+
+  - name: avg_daily_return_pct
+    label: "Average daily return %"
+    description: "Mean daily return in percent across the selected ticker-days. An equal-weighted average of daily returns, not a compounded return."
+    type: simple
+    type_params:
+      measure: avg_daily_return
+
+  - name: revenue
+    label: "Revenue"
+    description: "Total revenue"
+    type: simple
+    type_params:
+      measure: total_revenue
+
+  - name: gross_margin
+    label: "Gross margin"
+    description: "sum(gross_profit) / sum(total_revenue), returned as a fraction (0.45 = 45%). A ratio of sums, never an average of per-quarter margins. Revenue of quarters without gross profit (banks, insurers) is left out of the denominator so it cannot dilute the margin."
+    type: ratio
+    type_params:
+      numerator: gross_profit
+      denominator:
+        name: revenue
+        filter: "{{ Dimension('financial_quarter__has_gross_profit') }}"
+
+  - name: net_margin
+    label: "Net margin"
+    description: "sum(net_income) / sum(total_revenue), returned as a fraction (0.25 = 25%). A ratio of sums, never an average of per-quarter margins."
+    type: ratio
+    type_params:
+      numerator: net_income
+      denominator: revenue
+
+  # Ratio inputs must be metrics in this MetricFlow version, so the two numerators
+  # are exposed as simple metrics too.
+  - name: gross_profit
+    label: "Gross profit"
+    description: "Total gross profit (null for banks and insurers)"
+    type: simple
+    type_params:
+      measure: gross_profit
+
+  - name: net_income
+    label: "Net income"
+    description: "Total net income"
+    type: simple
+    type_params:
+      measure: net_income
